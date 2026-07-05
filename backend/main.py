@@ -57,15 +57,10 @@ def get_all_docs(partition_name: str):
     if db is None:
         raise HTTPException(status_code=500, detail="Database connection not established")
     try:
-        partition_path = f"_partition/{partition_name}/_all_docs?include_docs=true"
-        print(db)
-        print(partition_path)
-        _, _, data = db.get(partition_path)
-        documents = []
-        if "rows" in data:
-            for row in data["rows"]:
-                documents.append(row["doc"])
-        return documents
+        results = db.find({"selector": {"_id": {"$regex": f"^{partition_name}:"}}})
+        products = [doc for doc in results]
+        print(f"Retrieved {len(products)} documents from partition '{partition_name}'")
+        return products
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving documents: {str(e)}")
     
