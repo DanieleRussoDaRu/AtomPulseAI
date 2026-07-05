@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 
-const API_BASE_URL = "http://localhost:8000"; // Linux IP when published
+const API_BASE_URL = "http://87.106.219.74:8000"; // Linux IP when published
 
 export default function App() {
   const [formData, setFormData] = useState({ partition: '', description: '', clientCode: '', code: '', category: '' });

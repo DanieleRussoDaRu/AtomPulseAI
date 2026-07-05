@@ -9,7 +9,7 @@ app = FastAPI()
 # CORS configuration to allow React (both local and GithHub Pages) to access the FastAPI backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"], # Porte tipiche di React/Vite
+    allow_origins=["*"], # Porte tipiche di React/Vite
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
