@@ -1,0 +1,29 @@
+IONOS.md
+
+# === PYTHON (Backend) ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+.env
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# === NODE / REACT (Frontend) ===
+node_modules/
+/frontend/dist/
+/frontend/build/
+.eslintcache
+.node_repl_history
+
+# === LOGS & OPERATING SYSTEMS ===
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
