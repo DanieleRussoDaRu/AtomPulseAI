@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import couchdb
@@ -24,9 +24,16 @@ try:
 
     if db_name in couch:
         db = couch[db_name]
+        print("Successfully connected to CouchDb database")
     else:
-        db = couch.create(db_name, partitioned=True)
-    print("Successfully connected to CouchDb database")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Database '{db_name}' not found in CouchDb server"
+        )
+            
+except HTTPException as e:
+    db = None
+    raise
 except Exception as e:
     print("Error during CouchDb connection:", str(e))
     db = None
@@ -45,6 +52,23 @@ class Product(BaseModel):
 def home():
     return {"status": "Python backend working", "database_connected": db is not None}
 
+@app.get("/api/partition/{partition_name}")
+def get_all_docs(partition_name: str):
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database connection not established")
+    try:
+        partition_path = f"_partition/{partition_name}/_all_docs?include_docs=true"
+        print(db)
+        print(partition_path)
+        _, _, data = db.get(partition_path)
+        documents = []
+        if "rows" in data:
+            for row in data["rows"]:
+                documents.append(row["doc"])
+        return documents
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving documents: {str(e)}")
+    
 @app.post("/api/insert_product")
 def insert_product(doc: Product):
     if db is None:
