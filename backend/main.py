@@ -42,7 +42,7 @@ except Exception as e:
 class Product(BaseModel):
     partition: str
     client_code: str
-    code: str
+    ap_code: str
     description: str
     last_update: str
     category: str
@@ -64,6 +64,19 @@ def get_all_docs(partition_name: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving documents: {str(e)}")
     
+@app.get("/api/partitions")
+def get_all_partitions():
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database connection not established")
+    
+    try:
+        results = db.view("parts/partitions", group=True)
+        partitions = [row['key'] for row in results if row['key'] is not None]
+        return {"partitions": partitions}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving partitions: {str(e)}")
+
 @app.post("/api/insert_product")
 def insert_product(doc: Product):
     if db is None:
@@ -74,7 +87,7 @@ def insert_product(doc: Product):
         data = {
             "_id": partitioned_id,
             "client_code": doc.client_code,
-            "code": doc.code,
+            "ap_code": doc.ap_code,
             "description": doc.description,
             "last_update": doc.last_update,
             "category": doc.category
