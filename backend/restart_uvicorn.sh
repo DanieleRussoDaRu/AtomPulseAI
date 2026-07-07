@@ -1,36 +1,28 @@
 #!/bin/bash
 
-# --- 1. PROCESS IDENTIFICATION ---
-# 'pgrep -f' directoly searchs the PID (Process ID).
-# It's cleaner and aviod the problem of "ps aux | grep", that often captures the grep command itself.
-PID=$(pgrep -f "uvicorn main:app")
+# --- 1. IDENTIFICATION AND PROCESS KILL ---
+# Cerca solo i processi reali di uvicorn escludendo lo script corrente.
+PID=$(pgrep -f "uvicorn main:app" | grep -v $$)
 
-# --- 2. KILLING EXISTING PROCESS ---
 if [ -n "$PID" ]; then
-    echo "Found Uvicorn process PID: $PID. killing..."
-    # 'kill -9' sends SIGKILL signal, that force the process to close immediately
+    echo "Found uvicorn PID: $PID. killing..."
     kill -9 $PID
+    sleep 1 #Idle for 1 sec
 else
-    echo "Nessun Uvicorn process found."
+    echo "No uvicorn process found."
 fi
 
-# --- 3. VIRTUAL ENVIRONMENT ACTIVATION ---
-# 'source' (o il punto '.') executes the script in the context of the current shell,
-# allowing to load virtual enviroinmental variable (venv)
-source venv/bin/activate
+# --- 2. BACKGROUND START WITH ABS PATH/RELATIVE OF VENV ---
+echo "Launching uvicorn..."
 
-# --- 4. BACKGROUND RUN & REDIRECTING LOG ---
-# 'nohup' (No Hang Up) allow process to keep running even if the terminal is closed or disconnected.
-# '--host 0.0.0.0' server is accessible from any external address.
-# '--port 8000' listening door.
-# '>' redirects the standard output (stdout) in the uvicorn.log.
-# '2>&1' redirects errors (stderr, identificato dal canale 2) in the same place of the stdout (channel 1).
-# '&' final the entire command in background, giving back the terminal control.
-echo "Lauching Uvircon..."
-nohup uvicorn main:app --host 0.0.0.0 --port 8000 > uvicorn.log 2>&1 &
+# Pointing directly at venv/bin/uvicorn, Python use automatically
+# virtual environment libraries
+nohup ./venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 > uvicorn.log 2>&1 &
 
-echo "Uvicorn restarted successfully!"
-
-# --- MANUALLY GIVE "chmod +x restart_uvicorn.sh" AND THEN "./restart_uvicorn.sh" ---
-# --- OR LAUNCH WITH BASH "bash restart_uvicorn.sh" ---
-
+# 1 sec wait to check if it's still running
+sleep 1
+if ps -p $! > /dev/null; then
+    echo "Uvicorn restarted succesfully! PID: $!"
+else
+    echo "Error: Uvicorn crashed after start. Check uvicorn.log"
+fi
